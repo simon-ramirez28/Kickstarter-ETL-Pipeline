@@ -6,7 +6,7 @@ import sys
 
 # --- LOGGER CONFIGURATION ---
 LOG_FILE = "logs/etl_pipeline.log"
-# Ensure the 'logs' folder exists
+# Point the logger to the log directory, create if it doesn't exist
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 # 1. Create the logger object
@@ -79,6 +79,57 @@ def inspect_data(df: pd.DataFrame):
         
         logger.info("Initial data inspection completed.")
 
+def transform_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Make the necessary transformations to clean and model the data.
+    """
+    logger.info("Starting Data Transformation phase.")
+    
+    # --- 1. Cleaning and Creating Dates/Times ---
+    # Convert date columns to datetime format
+    df['launched_at'] = pd.to_datetime(df['launched'])
+    df['deadline_at'] = pd.to_datetime(df['deadline'])
+    
+    # Calculate campaign duration in days
+    df['duration_days'] = (df['deadline_at'] - df['launched_at']).dt.total_seconds() / (60 * 60 * 24)
+    logger.info("Dates converted to datetime and campaign duration calculated.")
+    
+    # --- 2. Currency Unification and Key Metrics ---
+    # Rename 'real' columns for clarity, ensuring we work in USD.
+    df = df.rename(columns={
+        'usd_pledged_real': 'pledged_usd',
+        'usd_goal_real': 'goal_usd'
+    })
+    logger.info("Monetary columns renamed to 'pledged_usd' and 'goal_usd'.")
+    
+    # --- 3. Success Flag Creation ---
+    # Map the state to 1 (success) or 0 (failure, canceled, suspended, etc.)
+    SUCCESS_STATES = ['successful']
+    df['success_flag'] = df['state'].apply(lambda x: 1 if x in SUCCESS_STATES else 0)
+    logger.info("Binary flag 'success_flag' created.")
+
+    # --- 4. Final Column Selection and Ordering ---
+    # Create a final DataFrame with only the columns we will use for modeling
+    final_columns = [
+        'ID', 
+        'name', 
+        'main_category', 
+        'category',
+        'country', 
+        'backers', 
+        'pledged_usd', 
+        'goal_usd',
+        'success_flag', 
+        'state', # Keep for State Dimension
+        'launched_at', 
+        'deadline_at', 
+        'duration_days'
+    ]
+    df_transformed = df[final_columns].copy()
+    
+    logger.info(f"Transformation completed. New DataFrame has {df_transformed.shape[0]} rows and {df_transformed.shape[1]} columns.")
+    return df_transformed
+
 
 if __name__ == "__main__":
     logger.info("==============================================")
@@ -88,6 +139,14 @@ if __name__ == "__main__":
     
     if kickstarter_df is not None:
         inspect_data(kickstarter_df)
+
+        # Call the transformation function
+        transformed_df = transform_data(kickstarter_df)
+
+        # Quick inspection of the transformed data
+        logger.info("Inspecting transformed data:")
+        logger.info(f"Unique values in 'success_flag':\n{transformed_df['success_flag'].value_counts().to_string()}")
+        logger.info(f"Null values in 'pledged_usd': {transformed_df['pledged_usd'].isnull().sum()}")
     
     logger.info("END OF ETL PIPELINE.")
     logger.info("==============================================")
