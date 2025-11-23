@@ -1,0 +1,12 @@
+# Entorno virtual
+venv/
+__pycache__/
+*.pyc
+
+# Archivos de datos muy grandes (si exceden los 50MB)
+data/*.csv
+data/*.zip
+
+# Archivos de logs del proyecto
+logs/
+*.log

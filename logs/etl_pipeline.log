@@ -1,0 +1,36 @@
+2025-11-22 20:38:32 - KickstarterETL - INFO - ==============================================
+2025-11-22 20:38:32 - KickstarterETL - INFO - START OF KICKSTARTER ETL PIPELINE
+2025-11-22 20:38:32 - KickstarterETL - INFO - Extraction started.
+2025-11-22 20:38:32 - KickstarterETL - INFO - Attempting to read the file: data/raw/ks-projects-201801.csv
+2025-11-22 20:38:33 - KickstarterETL - INFO - Extraction completed successfully.
+2025-11-22 20:38:33 - KickstarterETL - INFO - DataFrame loaded with 378661 rows and 15 columns.
+2025-11-22 20:38:33 - KickstarterETL - INFO - --- Starting Initial Data Inspection ---
+2025-11-22 20:38:33 - KickstarterETL - INFO - 
+Data types of columns:
+ID                    int64
+name                 object
+category             object
+main_category        object
+currency             object
+deadline             object
+goal                float64
+launched             object
+pledged             float64
+state                object
+backers               int64
+country              object
+usd pledged         float64
+usd_pledged_real    float64
+usd_goal_real       float64
+dtype: object
+2025-11-22 20:38:33 - KickstarterETL - INFO - Count of unique values in 'state':
+state
+failed        197719
+successful    133956
+canceled       38779
+undefined       3562
+live            2799
+suspended       1846
+2025-11-22 20:38:33 - KickstarterETL - INFO - Initial data inspection completed.
+2025-11-22 20:38:33 - KickstarterETL - INFO - END OF ETL PIPELINE.
+2025-11-22 20:38:33 - KickstarterETL - INFO - ==============================================
