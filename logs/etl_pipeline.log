@@ -1,11 +1,11 @@
-2025-11-22 21:22:05 - KickstarterETL - INFO - ==============================================
-2025-11-22 21:22:05 - KickstarterETL - INFO - START OF KICKSTARTER ETL PIPELINE
-2025-11-22 21:22:05 - KickstarterETL - INFO - Extraction started.
-2025-11-22 21:22:05 - KickstarterETL - INFO - Attempting to read the file: data/raw/ks-projects-201801.csv
-2025-11-22 21:22:06 - KickstarterETL - INFO - Extraction completed successfully.
-2025-11-22 21:22:06 - KickstarterETL - INFO - DataFrame loaded with 378661 rows and 15 columns.
-2025-11-22 21:22:06 - KickstarterETL - INFO - --- Starting Initial Data Inspection ---
-2025-11-22 21:22:06 - KickstarterETL - INFO - 
+2025-11-23 20:15:39 - KickstarterETL - INFO - ==============================================
+2025-11-23 20:15:39 - KickstarterETL - INFO - START OF KICKSTARTER ETL PIPELINE
+2025-11-23 20:15:39 - KickstarterETL - INFO - Extraction started.
+2025-11-23 20:15:39 - KickstarterETL - INFO - Attempting to read the file: data/raw/ks-projects-201801.csv
+2025-11-23 20:15:39 - KickstarterETL - INFO - Extraction completed successfully.
+2025-11-23 20:15:39 - KickstarterETL - INFO - DataFrame loaded with 378661 rows and 15 columns.
+2025-11-23 20:15:39 - KickstarterETL - INFO - --- Starting Initial Data Inspection ---
+2025-11-23 20:15:39 - KickstarterETL - INFO - 
 Data types of columns:
 ID                    int64
 name                 object
@@ -23,7 +23,7 @@ usd pledged         float64
 usd_pledged_real    float64
 usd_goal_real       float64
 dtype: object
-2025-11-22 21:22:06 - KickstarterETL - INFO - Count of unique values in 'state':
+2025-11-23 20:15:39 - KickstarterETL - INFO - Count of unique values in 'state':
 state
 failed        197719
 successful    133956
@@ -31,17 +31,30 @@ canceled       38779
 undefined       3562
 live            2799
 suspended       1846
-2025-11-22 21:22:06 - KickstarterETL - INFO - Initial data inspection completed.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Starting Data Transformation phase.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Dates converted to datetime and campaign duration calculated.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Monetary columns renamed to 'pledged_usd' and 'goal_usd'.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Binary flag 'success_flag' created.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Transformation completed. New DataFrame has 378661 rows and 13 columns.
-2025-11-22 21:22:06 - KickstarterETL - INFO - Inspecting transformed data:
-2025-11-22 21:22:06 - KickstarterETL - INFO - Unique values in 'success_flag':
+2025-11-23 20:15:39 - KickstarterETL - INFO - Initial data inspection completed.
+2025-11-23 20:15:39 - KickstarterETL - INFO - Starting Data Transformation phase.
+2025-11-23 20:15:40 - KickstarterETL - INFO - Dates converted to datetime and campaign duration calculated.
+2025-11-23 20:15:40 - KickstarterETL - INFO - Monetary columns renamed to 'pledged_usd' and 'goal_usd'.
+2025-11-23 20:15:40 - KickstarterETL - INFO - Binary flag 'success_flag' created.
+2025-11-23 20:15:40 - KickstarterETL - WARNING - Removed 4 rows because the 'name' field was null (NOT NULL constraint).
+2025-11-23 20:15:40 - KickstarterETL - INFO - Transformation completed. New DataFrame has 378657 rows and 13 columns.
+2025-11-23 20:15:40 - KickstarterETL - INFO - Inspecting transformed data:
+2025-11-23 20:15:40 - KickstarterETL - INFO - Unique values in 'success_flag':
 success_flag
-0    244705
+0    244701
 1    133956
-2025-11-22 21:22:06 - KickstarterETL - INFO - Null values in 'pledged_usd': 0
-2025-11-22 21:22:06 - KickstarterETL - INFO - END OF ETL PIPELINE.
-2025-11-22 21:22:06 - KickstarterETL - INFO - ==============================================
+2025-11-23 20:15:40 - KickstarterETL - INFO - Null values in 'pledged_usd': 0
+2025-11-23 20:15:40 - KickstarterETL - INFO - Connected to database: data/kickstarter_warehouse.db. Creating schema...
+2025-11-23 20:15:41 - KickstarterETL - INFO - Dimension and fact tables schema created successfully.
+2025-11-23 20:15:41 - KickstarterETL - INFO - Starting the Load (L) phase into the Data Warehouse.
+2025-11-23 20:15:41 - KickstarterETL - INFO - Initiating load of Dim_Date...
+2025-11-23 20:15:41 - KickstarterETL - INFO - Dim_Date cargada con 3169 fechas únicas.
+2025-11-23 20:15:41 - KickstarterETL - INFO - Loading Dimension Dim_State...
+2025-11-23 20:15:43 - KickstarterETL - INFO - Dim_State loaded. Found 6 unique states.
+2025-11-23 20:15:43 - KickstarterETL - INFO - Loading Dimension Dim_Category...
+2025-11-23 20:15:43 - KickstarterETL - INFO - Dim_Category loaded. Found 170 unique categories.
+2025-11-23 20:15:43 - KickstarterETL - INFO - Preparing and loading Fact_Campaigns...
+2025-11-23 20:15:49 - KickstarterETL - INFO - Fact_Campaigns cargada con 378657 registros.
+2025-11-23 20:15:49 - KickstarterETL - INFO - Connection to the database closed.
+2025-11-23 20:15:49 - KickstarterETL - INFO - END OF ETL PIPELINE.
+2025-11-23 20:15:49 - KickstarterETL - INFO - ==============================================
