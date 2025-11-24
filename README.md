@@ -2,54 +2,82 @@
 
 This repository contains an ETL (Extract, Transform, Load) pipeline built to prepare a dataset of Kickstarter project records for analysis and loading into a data warehouse or downstream analytics store. The original dataset is available on Kaggle: https://www.kaggle.com/datasets/kemical/kickstarter-projects
 
-## Overview
-- Ingests the raw Kickstarter projects CSV file from `data/raw/`.
-- Cleans and transforms the raw data into an analysis-ready tabular form.
-- Loads the cleaned data into `data/processed/` or a target data warehouse/database.
+## 🛠️ Technology Stack
 
-**Phases**
+    Language: Python 3.x
 
-### Extraction:
-- Source: the pipeline reads the raw CSV located in `data/raw/` (for example `ks-projects-201801.csv`).
-- Purpose: capture a faithful snapshot of the source data and perform light validation so transformation can assume a predictable input shape.
-- Typical steps:
-	- Read the CSV with a robust CSV reader (handling different encodings and separators).
-	- Validate the presence of required columns and expected types where feasible.
-	- Log or surface any gross issues (corrupt rows, missing file, unreadable lines).
-	- Persist a copy of the raw snapshot (optional) so the pipeline is auditable and repeatable.
+    ETL Libraries: Pandas (for data manipulation)
 
-### Transformation:
-This is the most important phase — where raw records become clean, consistent, and useful for analysis.
+    Data Warehouse: SQLite3 (standard Python module, used as a lightweight DWH)
 
-- Goals:
-	- Clean noisy, inconsistent, and malformed values.
-	- Convert textual fields to the correct types (dates, numeric, booleans).
-	- Derive new features useful for analysis and reporting.
-	- Enforce data quality rules and make the dataset idempotent when re-run.
+    Logging: Python logging module (for traceability and error handling)
 
-- Key operations commonly performed:
-	- Parsing timestamps: convert `launched_at`, `deadline` and similar fields to timezone-aware datetimes and compute campaign duration (e.g., `duration_days = deadline - launched_at`).
-	- Numeric normalization: convert `goal` to numeric and, if present, normalize currencies into a single reference currency (e.g., USD) using exchange rates or a consistent conversion approach.
-	- Category normalization: standardize `category` and `subcategory` names/ids so aggregate queries are stable.
-	- Handling nulls: define and apply rules for missing values (fill, infer, or mark explicitly).
-	- Deduplication: remove or consolidate duplicate records using a deterministic key.
-	- Creating derived fields: e.g., `successful` flag (goal reached), `pledged_ratio`, `launch_month`, `country_code`, `duration_days`, and other engineered metrics.
-	- Data validation checks: row counts, required-column completeness thresholds, value-range checks (e.g., non-negative goals), and uniqueness of primary keys.
-	- Logging and testability: emit transformation summaries (counts changed, rows removed) and fail-fast when critical quality gates are not met.
+    Modeling: Dimensional Modeling (Star Schema)
 
-- Importance and practices:
-	- Keep transformations deterministic and idempotent: running the step multiple times on the same raw input should produce the same output.
-	- Break complex transformations into smaller, testable functions (for unit testing and maintenance).
-	- Treat the Transformation step as the place to enforce business rules and provenance metadata (e.g., `transformed_at`, `source_file`, `source_row_id`).
+## 🏗️ Data Pipeline Explanation (ETL)
 
-### Load:
-- Target: write the transformed dataset to `data/processed/` (CSV, Parquet) or load into a data warehouse or database table.
-- Considerations:
-	- Write mode: choose `overwrite` for full snapshots or `append`/`upsert` for incremental loads — implement idempotency where possible.
-	- Partitioning: write data partitioned by a useful column (e.g., year/month of `launched_at`) if using Parquet or a data warehouse to improve query performance.
-	- Schema enforcement: ensure the target schema is compatible with the transformed dataset (types, column names, nullability).
-	- Post-load validation: confirm row counts, sample checks, and any referential integrity constraints.
-	- Logging and observability: record when the load ran, how many rows were written, and any errors encountered.
+The pipeline is executed via src/etl_pipeline.py and consists of three main phases:
 
-**Notes & Usage**
-- The main ETL orchestration is implemented in `src/etl_pipeline.py` (see the Log to see the FULL PROCESS).
+### 1. Extraction (E)
+
+**Goal:** To safely and efficiently read the raw data from the local storage.
+**Step** | **Action** | **Output**
+Data Ingestion | The script reads the raw ks-projects-201801.csv file from the /data/raw directory.	| A raw Pandas DataFrame (kickstarter_df).
+Error Handling | Implements try-except blocks to catch file not found errors and logging to record the start and successful completion of the extraction. | Console logs and file logs (logs/etl_pipeline.log).
+
+### 2. Transformation (T)
+
+Goal: Clean the data, derive necessary metrics, and prepare the structure for the dimensional model.
+Step	Transformation	Rationale/Modification
+Date Conversion	Converts deadline and launched columns from object/string types to proper datetime objects.	Enables time-based calculations and accurate dimensional modeling.
+Duration Calculation	Calculates the total campaign length in days, stored in the new column duration_days.	Creates a key performance indicator (KPI) for analysis.
+Monetary Unification	Renames and standardizes the currency columns (usd pledged real and usd_goal_real) to pledged_usd and goal_usd.	Ensures all monetary analysis uses consistent, USD-converted values.
+Success Flag Creation	Creates a binary column success_flag (1 for 'successful', 0 for all other states like 'failed', 'canceled', etc.).	Simplifies analytical queries and machine learning feature engineering.
+NULL Constraint Check	Removes rows where the critical field name is null.	Crucial Fix: Prevents the NOT NULL constraint failed error during the Load phase.
+Column Selection	Filters the DataFrame to include only the columns necessary for the Fact and Dimension tables.	Prepares the data for the final loading structure.
+
+### 3. Loading (L)
+
+Goal: To map the transformed data into a Star Schema and load it into the SQLite Data Warehouse (kickstarter_warehouse.db).
+Table	Type	Purpose & Mapping
+Dim_State	Dimension	Stores unique campaign statuses and the binary is_successful flag. Mapping: state column is mapped to a unique state_key.
+Dim_Category	Dimension	Stores unique combinations of main_category and category. Mapping: Both columns are used to derive a unique category_key.
+Dim_Date	Dimension	Stores every unique launch date and its temporal attributes (year, month, day_of_week, is_weekend). Mapping: The launched_at datetime is mapped to a numerical date_key (YYYYMMDD).
+Fact_Campaigns	Fact	Stores the performance metrics (pledged_usd, goal_usd, backers, duration_days). Mapping: It receives the Foreign Keys (state_key, category_key, launched_date_key) to link to the dimensional data.
+
+🚀 Getting Started
+
+Follow these steps to replicate and run the pipeline:
+
+1. Prerequisites
+
+You need Python 3.x installed.
+Bash
+
+# Clone the repository (once uploaded to GitHub)
+`git clone <YOUR_REPO_URL>
+cd <YOUR_PROJECT_FOLDER>`
+
+# Install dependencies (pandas, etc.)
+`pip install -r requirements.txt`
+
+2. Data Setup
+
+    Download the ks-projects-201801.csv file from the Kaggle dataset link.
+
+    Place the downloaded file into the data/raw/ directory.
+
+3. Execution
+
+Run the main ETL script from the project root:
+Bash
+
+`python src/etl_pipeline.py`
+
+Upon successful completion, the data warehouse file, data/kickstarter_warehouse.db, will be generated, containing the fully modeled Star Schema.
+
+4. Validation & Analysis
+
+Use a SQLite client (like DB Browser for SQLite) to open the .db file and run analytical queries against the dimensional model.
+---
+> **Note:** Or Just simply check the log file to see how this pipeline works
