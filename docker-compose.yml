@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    container_name: kickstarter-etl
+
+  etl-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./tests:/app/tests
+      - ./src:/app/src
+    environment:
+      - PYTHONUNBUFFERED=1
+    container_name: kickstarter-etl-tests
